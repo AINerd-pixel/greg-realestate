@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono&family=Oswald:wght@700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-oswald: "Oswald", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white font-sans;
+  }
+}
+
+@layer utilities {
+  .scrolling-triangles {
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M27 8.5 Q30 5 33 8.5 L52 43 Q55 48 49 48 L11 48 Q5 48 8 43 Z' fill='%23000000' fill-opacity='0.03'/%3E%3Cpath d='M87 51.5 Q90 55 93 51.5 L112 17 Q115 12 109 12 L71 12 Q65 12 68 17 Z' fill='%23000000' fill-opacity='0.03'/%3E%3Cpath d='M27 111.5 Q30 115 33 111.5 L52 77 Q55 72 49 72 L11 72 Q5 72 8 77 Z' fill='%23000000' fill-opacity='0.03'/%3E%3Cpath d='M87 68.5 Q90 65 93 68.5 L112 103 Q115 108 109 108 L71 108 Q65 108 68 103 Z' fill='%23000000' fill-opacity='0.03'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    background-attachment: fixed;
+    animation: triangle-scroll 12s linear infinite;
+  }
+}
+
+@keyframes triangle-scroll {
+  0% { background-position: 0 0; }
+  100% { background-position: -120px 120px; }
+}
+
+.markdown-body {
+  @apply text-sm leading-relaxed;
+}
+
+.markdown-body p {
+  @apply mb-2 last:mb-0;
+}
+
+.markdown-body ul {
+  @apply list-disc ml-4 mb-2;
+}
+
+.markdown-body strong {
+  @apply font-semibold;
+}
