@@ -243,10 +243,9 @@ function HomePage() {
                 <div className="relative mb-8">
                   <div className="w-64 h-64 rounded-full border-4 border-red-600 p-2 overflow-hidden bg-zinc-100">
                     <img 
-                      src="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/650343273_912345095124712_6325377258393781020_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=KH0LCIlYIZsQ7kNvwEfL0Oe&_nc_oc=AdkjL6JJ-U2pLLgiuB0qsurTvvIiUITUp2i1LYqe6wxHc3QQpNWVnlahEFAoafzR76Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=ex0U9bpq5QC17UjbKE63OQ&_nc_ss=8&oh=00_AfwRV4KEhix7I5FY08OkjNg1PjmKI6VZ_cEnrR4YYINHWw&oe=69BCFC9C" 
-                      alt="Tushar Gala" 
+                      src="/tushar-gala.jpg"
+                      alt="Tushar Gala"
                       className="w-full h-full object-cover rounded-full"
-                      referrerPolicy="no-referrer"
                     />
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-red-600 text-white p-3 rounded-2xl shadow-lg">

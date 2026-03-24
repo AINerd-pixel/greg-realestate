@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { Message } from "../types";
 
 const SYSTEM_INSTRUCTION = `
@@ -8,7 +8,7 @@ Core Objective:
 Your goal is to assist potential clients by answering general real estate questions and gathering information to facilitate a follow-up with Tushar.
 
 Interaction Guidelines:
-1. Greeting: Always introduce yourself as Tushar Gala’s assistant.
+1. Greeting: Always introduce yourself as Tushar Gala's assistant.
 2. Conciseness: Keep answers direct. If a question is complex, offer to have Tushar call the lead back.
 3. Lead Qualification: If the caller is interested in buying or selling, gather their name, preferred timeline, and general property needs.
 4. Tone: Helpful, polite, and respectful of the caller's time.
@@ -28,31 +28,28 @@ What to Avoid:
 - Do not guess at listing availability; offer to check current listings and call them back.
 
 Lead Capture Trigger:
-When you have gathered the user's name, timeline, and property needs, you should summarize the information and tell them Tushar will be in touch. 
+When you have gathered the user's name, timeline, and property needs, you should summarize the information and tell them Tushar will be in touch.
 IMPORTANT: If the user provides lead information, output a special JSON block at the end of your message (only when all info is gathered) in this format:
 [[LEAD_DATA:{"name": "...", "timeline": "...", "propertyNeeds": "..."}]]
 `;
 
 export async function chatWithAI(messages: Message[]) {
-  const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-  const model = "gemini-3-flash-preview";
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '', dangerouslyAllowBrowser: true });
 
   const history = messages.slice(0, -1).map(m => ({
-    role: m.role,
-    parts: [{ text: m.text }]
+    role: (m.role === 'model' ? 'assistant' : 'user') as "user" | "assistant",
+    content: m.text,
   }));
 
-  const response = await genAI.models.generateContent({
-    model,
-    contents: [
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: SYSTEM_INSTRUCTION },
       ...history,
-      { role: 'user', parts: [{ text: messages[messages.length - 1].text }] }
+      { role: "user", content: messages[messages.length - 1].text },
     ],
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.7,
-    }
+    temperature: 0.7,
   });
 
-  return response.text;
+  return response.choices[0].message.content;
 }
