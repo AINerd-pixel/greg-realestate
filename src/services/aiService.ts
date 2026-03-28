@@ -35,7 +35,11 @@ IMPORTANT: If the user provides lead information, output a special JSON block at
 `;
 
 export async function chatWithAI(messages: Message[]) {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '', dangerouslyAllowBrowser: true });
+  const openai = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY || '',
+    baseURL: 'https://api.groq.com/openai/v1',
+    dangerouslyAllowBrowser: true,
+  });
 
   const history = messages.slice(0, -1).map(m => ({
     role: (m.role === 'model' ? 'assistant' : 'user') as "user" | "assistant",
@@ -43,7 +47,7 @@ export async function chatWithAI(messages: Message[]) {
   }));
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "llama-3.3-70b-versatile",
     messages: [
       { role: "system", content: SYSTEM_INSTRUCTION },
       ...history,
