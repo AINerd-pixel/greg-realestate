@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
@@ -39,7 +40,7 @@ export default function Navigation({ dark = false, compact = false }: { dark?: b
           <Menu size={28} />
         </button>
 
-        {mobileOpen && (
+        {mobileOpen && createPortal(
           <div className="fixed inset-0 z-[200] bg-zinc-950/97 backdrop-blur-md flex flex-col items-center justify-center gap-10">
             <button onClick={() => setMobileOpen(false)} className="absolute top-6 right-6 text-white p-2" aria-label="Close menu">
               <X size={32} />
@@ -49,7 +50,8 @@ export default function Navigation({ dark = false, compact = false }: { dark?: b
             <button onClick={() => handleScroll('contact-section')} className="text-white text-2xl font-bold uppercase tracking-widest">Contact</button>
             <button onClick={() => { setMobileOpen(false); navigate('/buyers'); window.scrollTo(0, 0); }} className="text-white text-2xl font-bold uppercase tracking-widest">Buyers</button>
             <button onClick={() => { setMobileOpen(false); navigate('/sellers'); window.scrollTo(0, 0); }} className="text-white text-2xl font-bold uppercase tracking-widest">Sellers</button>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </>

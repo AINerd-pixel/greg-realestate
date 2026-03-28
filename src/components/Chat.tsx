@@ -3,7 +3,7 @@ import { Send, User, Bot, Loader2, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { Message, Lead } from '../types';
-import { chatWithAI } from '../services/geminiService';
+import { chatWithAI } from '../services/aiService';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
