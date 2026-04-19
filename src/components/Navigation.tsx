@@ -26,7 +26,7 @@ export default function Navigation({ dark = false, compact = false }: { dark?: b
   return (
     <>
       {/* Desktop nav */}
-      <div className={`hidden sm:flex items-center ${compact ? 'gap-3 sm:gap-6' : 'gap-4 sm:gap-8 md:gap-12'} flex-wrap ${!compact && !isHome ? 'w-full justify-center md:justify-start' : ''}`}>
+      <div className={`hidden sm:flex items-center ${compact ? 'gap-3 sm:gap-6' : 'gap-4 sm:gap-8 md:gap-12'} flex-wrap ${!compact && !isHome ? 'w-full justify-center' : ''}`}>
         <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${baseStyle} ${location.pathname === '/' ? activeStyle : ''}`}>Home</Link>
         <button onClick={() => handleScroll('legacy-section')} className={baseStyle}>About</button>
         <button onClick={() => handleScroll('contact-section')} className={baseStyle}>Contact</button>
