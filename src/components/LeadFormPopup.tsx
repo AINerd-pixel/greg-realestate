@@ -1,0 +1,180 @@
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, CheckCircle } from 'lucide-react';
+
+const STORAGE_KEY = 'lead_form_dismissed';
+
+export default function LeadFormPopup() {
+  const [visible, setVisible] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    interest: '',
+  });
+
+  useEffect(() => {
+    if (sessionStorage.getItem(STORAGE_KEY)) return;
+    const delay = parseInt(process.env.POPUP_DELAY_MS ?? '10000', 10);
+    const timer = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const dismiss = () => {
+    setVisible(false);
+    sessionStorage.setItem(STORAGE_KEY, '1');
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!form.name || !form.phone || !form.interest) return;
+    setLoading(true);
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, origin: 'Website' }),
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        setVisible(false);
+        sessionStorage.setItem(STORAGE_KEY, '1');
+      }, 2500);
+    } catch {
+      // fail silently
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-zinc-50";
+
+  return createPortal(
+    <AnimatePresence>
+      {visible && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={dismiss}
+            className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[150]"
+          />
+
+          {/* Popup */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 24 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] sm:w-[480px] z-[160] bg-white rounded-3xl shadow-2xl overflow-hidden"
+          >
+            {/* Red top accent */}
+            <div className="h-1.5 w-full bg-red-600" />
+
+            <div className="p-7 sm:p-8">
+              {/* Close button */}
+              <button
+                onClick={dismiss}
+                className="absolute top-5 right-5 p-2 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <AnimatePresence mode="wait">
+                {submitted ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-8 text-center"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-4">
+                      <CheckCircle className="text-red-600" size={32} />
+                    </div>
+                    <h3 className="font-serif text-2xl font-bold text-zinc-900 mb-2">Thank You!</h3>
+                    <p className="text-zinc-500 text-sm">Tushar will be in touch with you shortly.</p>
+                  </motion.div>
+                ) : (
+                  <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-red-600 mb-1">Get In Touch</h2>
+                    <p className="text-zinc-500 text-sm mb-6">Leave your details and Tushar will reach out to you personally.</p>
+
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                      <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        placeholder="Full Name *"
+                        required
+                        className={inputClass}
+                      />
+                      <input
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="Contact Number *"
+                        required
+                        className={inputClass}
+                      />
+                      <input
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="Email Address"
+                        type="email"
+                        className={inputClass}
+                      />
+                      <input
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        placeholder="Your Address"
+                        className={inputClass}
+                      />
+                      <select
+                        name="interest"
+                        value={form.interest}
+                        onChange={handleChange}
+                        required
+                        className={`${inputClass} ${!form.interest ? 'text-zinc-400' : 'text-zinc-900'}`}
+                      >
+                        <option value="" disabled>I'm interested in... *</option>
+                        <option value="Buying">Buying a Home</option>
+                        <option value="Selling">Selling a Home</option>
+                        <option value="Investing">Investing in Property</option>
+                        <option value="Renting">Renting / Leasing</option>
+                      </select>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+                      >
+                        {loading ? 'Submitting...' : 'Get a Free Consultation'}
+                      </button>
+                    </form>
+
+                    <p className="text-center text-[10px] text-zinc-400 mt-4">
+                      Your information is kept private and never shared.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}

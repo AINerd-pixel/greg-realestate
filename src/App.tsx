@@ -9,6 +9,7 @@ import StickyHeader from './components/StickyHeader';
 import { Message } from './types';
 import Buyers from './pages/Buyers';
 import Sellers from './pages/Sellers';
+import LeadFormPopup from './components/LeadFormPopup';
 
 function StatCounter({ end, prefix = '', suffix = '', decimals = 0 }: {
   end: number;
@@ -142,7 +143,7 @@ function HomePage() {
             transition={{ duration: 0.7, delay: 0.8 }}
             className="mt-4 text-white/60 text-[10px] sm:text-xs tracking-[0.35em] uppercase font-medium"
           >
-            Northern Virginia · Since 2009
+            Northern Virginia
           </motion.p>
         </div>
 
@@ -190,7 +191,7 @@ function HomePage() {
             <div className="h-[2px] w-20 bg-red-600 mb-10 rounded-full mx-auto" />
             <div className="max-w-3xl mx-auto space-y-5">
               <p className="text-zinc-500 text-lg sm:text-xl leading-relaxed">
-                Tushar Gala is a dedicated partner in your home-buying or selling journey, bringing over 15 years of experience to the Herndon market. Known for his integrity and deep local knowledge, Tushar has successfully guided over 500 families to their dream homes.
+                Tushar Gala is a dedicated partner in your home-buying or selling journey, bringing over 15 years of experience to the Herndon market. Known for his integrity and deep local knowledge, Tushar has successfully guided families to their dream homes.
               </p>
               <p className="text-zinc-500 text-lg sm:text-xl leading-relaxed">
                 Whether you're looking for your first home, an investment property to grow your portfolio, or a luxury estate that reflects your lifestyle, Tushar provides the expert guidance and personalized service you deserve.
@@ -399,6 +400,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-red-500/30 relative overflow-x-hidden">
       <StickyHeader />
+      <LeadFormPopup />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/buyers" element={<Buyers />} />

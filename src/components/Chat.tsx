@@ -15,12 +15,20 @@ export default function Chat({ messages, setMessages, onReset }: { messages: Mes
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionId = useRef(crypto.randomUUID());
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Generate a new session ID when chat is reset
+  useEffect(() => {
+    if (messages.length <= 1) {
+      sessionId.current = crypto.randomUUID();
+    }
+  }, [messages.length]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -34,25 +42,28 @@ export default function Chat({ messages, setMessages, onReset }: { messages: Mes
     try {
       const responseText = await chatWithAI(newMessages);
       if (responseText) {
-        // Check for lead data
-        const leadMatch = responseText.match(/\[\[LEAD_DATA:(.*?)\]\]/);
+        const displayMessage = responseText.replace(/\[\[LEAD_DATA:.*?\]\]/s, '').trim();
+        const fullConversation = [...newMessages, { role: 'model', text: displayMessage }];
+
+        // Check for lead data and upsert (one record per session)
+        const leadMatch = responseText.match(/\[\[LEAD_DATA:(.*?)\]\]/s);
         if (leadMatch) {
           try {
             const leadData: Lead = JSON.parse(leadMatch[1]);
-            // Save lead to backend
+            const details = fullConversation
+              .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
+              .join('\n\n');
             await fetch('/api/leads', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(leadData),
+              body: JSON.stringify({ ...leadData, origin: 'Chat', sessionId: sessionId.current, details }),
             });
           } catch (e) {
             console.error("Failed to parse lead data", e);
           }
         }
 
-        // Clean text from the JSON block for display
-        const displayMessage = responseText.replace(/\[\[LEAD_DATA:.*?\]\]/, '').trim();
-        setMessages([...newMessages, { role: 'model', text: displayMessage }]);
+        setMessages(fullConversation);
       }
     } catch (error) {
       console.error("Chat error:", error);

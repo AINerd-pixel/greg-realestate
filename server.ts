@@ -2,19 +2,73 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 
 const db = new Database("leads.db");
 db.exec(`
   CREATE TABLE IF NOT EXISTS leads (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT UNIQUE,
     name TEXT,
     email TEXT,
     phone TEXT,
+    address TEXT,
+    interest TEXT,
+    origin TEXT,
     timeline TEXT,
     property_needs TEXT,
+    details TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
+try { db.exec(`ALTER TABLE leads ADD COLUMN address TEXT`); } catch {}
+try { db.exec(`ALTER TABLE leads ADD COLUMN interest TEXT`); } catch {}
+try { db.exec(`ALTER TABLE leads ADD COLUMN origin TEXT`); } catch {}
+try { db.exec(`ALTER TABLE leads ADD COLUMN session_id TEXT`); } catch {}
+try { db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_session_id ON leads(session_id WHERE session_id IS NOT NULL)`); } catch {}
+try { db.exec(`ALTER TABLE leads ADD COLUMN details TEXT`); } catch {}
+
+async function syncToAirtable({ airtableBaseId, airtableToken, sessionId, name, phone, email, address, interest, origin, details }: Record<string, string | undefined>) {
+  const fields: Record<string, string> = Object.fromEntries(
+    Object.entries({ Name: name, Phone: phone, Email: email, Address: address, Interest: interest, Origin: origin, Details: details })
+      .filter(([, v]) => v != null && v !== '')
+  );
+
+  try {
+    if (sessionId) {
+      // Search for existing record by SessionId
+      const searchRes = await fetch(
+        `https://api.airtable.com/v0/${airtableBaseId}/Leads?filterByFormula=${encodeURIComponent(`{SessionId}="${sessionId}"`)}`,
+        { headers: { Authorization: `Bearer ${airtableToken}` } }
+      );
+      const searchData = await searchRes.json() as { records: { id: string }[] };
+      const existingId = searchData.records?.[0]?.id;
+
+      if (existingId) {
+        // Update existing record
+        const r = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/Leads/${existingId}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${airtableToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { ...fields, SessionId: sessionId } }),
+        });
+        if (!r.ok) console.error("Airtable update error:", r.status, await r.text());
+        return;
+      }
+      // No existing record — fall through to create with SessionId
+      fields.SessionId = sessionId;
+    }
+
+    const r = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/Leads`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${airtableToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ records: [{ fields }] }),
+    });
+    if (!r.ok) console.error("Airtable create error:", r.status, await r.text());
+  } catch (err) {
+    console.error("Airtable sync failed:", err);
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -24,12 +78,37 @@ async function startServer() {
 
   // API Routes
   app.post("/api/leads", (req, res) => {
-    const { name, email, phone, timeline, propertyNeeds } = req.body;
+    const { name, email, phone, address, interest, origin, timeline, propertyNeeds, sessionId, details } = req.body;
     try {
-      const stmt = db.prepare(
-        "INSERT INTO leads (name, email, phone, timeline, property_needs) VALUES (?, ?, ?, ?, ?)"
-      );
-      stmt.run(name, email, phone, timeline, propertyNeeds);
+      // Upsert by session_id for chat leads; plain insert for website popup (no sessionId)
+      if (sessionId) {
+        db.prepare(`
+          INSERT INTO leads (session_id, name, email, phone, address, interest, origin, timeline, property_needs, details)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(session_id) DO UPDATE SET
+            name = COALESCE(excluded.name, name),
+            email = COALESCE(excluded.email, email),
+            phone = COALESCE(excluded.phone, phone),
+            address = COALESCE(excluded.address, address),
+            interest = COALESCE(excluded.interest, interest),
+            origin = excluded.origin,
+            timeline = COALESCE(excluded.timeline, timeline),
+            property_needs = COALESCE(excluded.property_needs, property_needs),
+            details = excluded.details
+        `).run(sessionId, name, email, phone, address, interest, origin, timeline, propertyNeeds, details);
+      } else {
+        db.prepare(
+          "INSERT INTO leads (name, email, phone, address, interest, origin, timeline, property_needs) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        ).run(name, email, phone, address, interest, origin, timeline, propertyNeeds);
+      }
+
+      // Sync to Airtable
+      const airtableBaseId = process.env.AIRTABLE_BASE_ID;
+      const airtableToken = process.env.token;
+      if (airtableBaseId && airtableToken) {
+        syncToAirtable({ airtableBaseId, airtableToken, sessionId, name, phone, email, address, interest, origin, details });
+      }
+
       res.status(201).json({ success: true });
     } catch (error) {
       console.error("Error saving lead:", error);

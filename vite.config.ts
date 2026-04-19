@@ -9,6 +9,7 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY),
+      'process.env.POPUP_DELAY_MS': JSON.stringify(env.POPUP_DELAY_MS ?? '10000'),
     },
     resolve: {
       alias: {
