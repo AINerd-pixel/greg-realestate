@@ -5,17 +5,15 @@ import { X, CheckCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'lead_form_dismissed';
 
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+const isValidPhone = (v: string) => /^\+?[\d\s\-().]{7,}$/.test(v) && v.replace(/\D/g, '').length >= 7;
+
 export default function LeadFormPopup() {
   const [visible, setVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    interest: '',
-  });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', interest: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (sessionStorage.getItem(STORAGE_KEY)) return;
@@ -30,12 +28,31 @@ export default function LeadFormPopup() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    // Clear error on change
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = 'Full name is required.';
+    if (!form.phone.trim()) {
+      errs.phone = 'Phone number is required.';
+    } else if (!isValidPhone(form.phone)) {
+      errs.phone = 'Enter a valid phone number.';
+    }
+    if (form.email && !isValidEmail(form.email)) {
+      errs.email = 'Enter a valid email address.';
+    }
+    if (!form.interest) errs.interest = 'Please select your interest.';
+    return errs;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.interest) return;
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setLoading(true);
     try {
       await fetch('/api/leads', {
@@ -55,13 +72,17 @@ export default function LeadFormPopup() {
     }
   };
 
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all bg-zinc-50";
+  const inputClass = (field: string) =>
+    `w-full px-4 py-3 rounded-xl border text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 transition-all bg-zinc-50 ${
+      errors[field]
+        ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500'
+        : 'border-zinc-200 focus:ring-red-500/20 focus:border-red-500'
+    }`;
 
   return createPortal(
     <AnimatePresence>
       {visible && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -70,7 +91,6 @@ export default function LeadFormPopup() {
             className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[150]"
           />
 
-          {/* Popup */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -78,11 +98,9 @@ export default function LeadFormPopup() {
             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] sm:w-[480px] z-[160] bg-white rounded-3xl shadow-2xl overflow-hidden"
           >
-            {/* Red top accent */}
             <div className="h-1.5 w-full bg-red-600" />
 
             <div className="p-7 sm:p-8">
-              {/* Close button */}
               <button
                 onClick={dismiss}
                 className="absolute top-5 right-5 p-2 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
@@ -110,50 +128,31 @@ export default function LeadFormPopup() {
                     <p className="text-zinc-500 text-sm mb-6">Leave your details and Tushar will reach out to you personally.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-3">
-                      <input
-                        name="name"
-                        value={form.name}
-                        onChange={handleChange}
-                        placeholder="Full Name *"
-                        required
-                        className={inputClass}
-                      />
-                      <input
-                        name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        placeholder="Contact Number *"
-                        required
-                        className={inputClass}
-                      />
-                      <input
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        placeholder="Email Address"
-                        type="email"
-                        className={inputClass}
-                      />
-                      <input
-                        name="address"
-                        value={form.address}
-                        onChange={handleChange}
-                        placeholder="Your Address"
-                        className={inputClass}
-                      />
-                      <select
-                        name="interest"
-                        value={form.interest}
-                        onChange={handleChange}
-                        required
-                        className={`${inputClass} ${!form.interest ? 'text-zinc-400' : 'text-zinc-900'}`}
-                      >
-                        <option value="" disabled>I'm interested in... *</option>
-                        <option value="Buying">Buying a Home</option>
-                        <option value="Selling">Selling a Home</option>
-                        <option value="Investing">Investing in Property</option>
-                        <option value="Renting">Renting / Leasing</option>
-                      </select>
+                      <div>
+                        <input name="name" value={form.name} onChange={handleChange} placeholder="Full Name *" className={inputClass('name')} />
+                        {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
+                      </div>
+                      <div>
+                        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Contact Number *" className={inputClass('phone')} />
+                        {errors.phone && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phone}</p>}
+                      </div>
+                      <div>
+                        <input name="email" value={form.email} onChange={handleChange} placeholder="Email Address" type="email" className={inputClass('email')} />
+                        {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
+                      </div>
+                      <div>
+                        <input name="address" value={form.address} onChange={handleChange} placeholder="Your Address" className={inputClass('address')} />
+                      </div>
+                      <div>
+                        <select name="interest" value={form.interest} onChange={handleChange} className={`${inputClass('interest')} ${!form.interest ? 'text-zinc-400' : 'text-zinc-900'}`}>
+                          <option value="" disabled>I'm interested in... *</option>
+                          <option value="Buying">Buying a Home</option>
+                          <option value="Selling">Selling a Home</option>
+                          <option value="Investing">Investing in Property</option>
+                          <option value="Renting">Renting / Leasing</option>
+                        </select>
+                        {errors.interest && <p className="text-red-500 text-xs mt-1 ml-1">{errors.interest}</p>}
+                      </div>
 
                       <button
                         type="submit"
