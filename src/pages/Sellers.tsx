@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { DollarSign, BarChart3, Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import SEO from '../components/SEO';
 
 const cards = [
   {
@@ -27,12 +27,13 @@ export default function Sellers() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-red-500/30">
+      <SEO
+        title="Home Sellers"
+        description="Selling your home in Northern Virginia? Tushar Gala offers expert market analysis, premium staging advice, and aggressive negotiation to get you the best price in Herndon and Leesburg."
+        canonical="/sellers"
+      />
 
-      <nav className="p-6 border-b border-zinc-100">
-        <Navigation />
-      </nav>
-
-      <main className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
+      <main className="max-w-5xl mx-auto px-6 pt-28 pb-16 sm:pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Navigation from './Navigation';
 import { Logo } from './Logo';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function StickyHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,6 +19,10 @@ export default function StickyHeader() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const showNav = isScrolled || !isHome;
+
   return (
     <>
       {/* Scroll Progress Bar — always visible */}
@@ -31,7 +35,7 @@ export default function StickyHeader() {
 
       {/* Sticky Nav */}
       <AnimatePresence>
-        {isScrolled && (
+        {showNav && (
           <motion.div
             initial={{ y: -70, opacity: 0 }}
             animate={{ y: 2, opacity: 1 }}

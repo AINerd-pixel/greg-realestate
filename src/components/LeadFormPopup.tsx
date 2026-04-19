@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const STORAGE_KEY = 'lead_form_dismissed';
 
@@ -9,6 +10,7 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const isValidPhone = (v: string) => /^\+?[\d\s\-().]{7,}$/.test(v) && v.replace(/\D/g, '').length >= 7;
 
 export default function LeadFormPopup() {
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,16 +18,13 @@ export default function LeadFormPopup() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (location.pathname === '/open-house') return;
     if (sessionStorage.getItem(STORAGE_KEY)) return;
     const delay = parseInt(process.env.POPUP_DELAY_MS ?? '10000', 10);
     const timer = setTimeout(() => setVisible(true), delay);
     return () => clearTimeout(timer);
-  }, []);
+  }, [location.pathname]);
 
-  const dismiss = () => {
-    setVisible(false);
-    sessionStorage.setItem(STORAGE_KEY, '1');
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -87,7 +86,6 @@ export default function LeadFormPopup() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={dismiss}
             className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[150]"
           />
 
@@ -101,12 +99,6 @@ export default function LeadFormPopup() {
             <div className="h-1.5 w-full bg-red-600" />
 
             <div className="p-7 sm:p-8">
-              <button
-                onClick={dismiss}
-                className="absolute top-5 right-5 p-2 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
-              >
-                <X size={20} />
-              </button>
 
               <AnimatePresence mode="wait">
                 {submitted ? (

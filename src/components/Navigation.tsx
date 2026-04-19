@@ -1,7 +1,27 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Phone, Mail, Facebook } from 'lucide-react';
+
+const CONTACT = {
+  phone: 'tel:+17033823247',
+  email: 'mailto:tushar.gala@pearsonsmithrealty.com',
+  facebook: 'https://www.facebook.com/profile.php?id=100090476906978',
+};
+
+function SocialIcons({ isDark, size = 17 }: { isDark: boolean; size?: number }) {
+  const iconClass = `transition-colors hover:text-red-600 ${isDark ? 'text-zinc-500' : 'text-white/70 hover:text-white'}`;
+  const divider = <span className={`select-none font-black ${isDark ? 'text-zinc-300' : 'text-white/30'}`}>|</span>;
+  return (
+    <div className="flex items-center gap-2 ml-2">
+      <a href={CONTACT.phone} aria-label="Call Tushar" className={iconClass}><Phone size={size} strokeWidth={2.5} /></a>
+      {divider}
+      <a href={CONTACT.email} aria-label="Email Tushar" className={iconClass}><Mail size={size} strokeWidth={2.5} /></a>
+      {divider}
+      <a href={CONTACT.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={iconClass}><Facebook size={size} strokeWidth={2.5} /></a>
+    </div>
+  );
+}
 
 export default function Navigation({ dark = false, compact = false }: { dark?: boolean, compact?: boolean }) {
   const location = useLocation();
@@ -32,6 +52,7 @@ export default function Navigation({ dark = false, compact = false }: { dark?: b
         <button onClick={() => handleScroll('contact-section')} className={baseStyle}>Contact</button>
         <button onClick={() => { navigate('/buyers'); window.scrollTo(0, 0); }} className={baseStyle}>Buyers</button>
         <button onClick={() => { navigate('/sellers'); window.scrollTo(0, 0); }} className={baseStyle}>Sellers</button>
+        <SocialIcons isDark={isDark} size={compact ? 15 : 17} />
       </div>
 
       {/* Mobile hamburger */}
@@ -50,6 +71,13 @@ export default function Navigation({ dark = false, compact = false }: { dark?: b
             <button onClick={() => handleScroll('contact-section')} className="text-white text-2xl font-bold uppercase tracking-widest">Contact</button>
             <button onClick={() => { setMobileOpen(false); navigate('/buyers'); window.scrollTo(0, 0); }} className="text-white text-2xl font-bold uppercase tracking-widest">Buyers</button>
             <button onClick={() => { setMobileOpen(false); navigate('/sellers'); window.scrollTo(0, 0); }} className="text-white text-2xl font-bold uppercase tracking-widest">Sellers</button>
+            <div className="flex items-center gap-4 mt-2">
+              <a href={CONTACT.phone} aria-label="Call Tushar" className="text-white/70 hover:text-red-400 transition-colors"><Phone size={24} strokeWidth={2.5} /></a>
+              <span className="text-white/30 font-black">|</span>
+              <a href={CONTACT.email} aria-label="Email Tushar" className="text-white/70 hover:text-red-400 transition-colors"><Mail size={24} strokeWidth={2.5} /></a>
+              <span className="text-white/30 font-black">|</span>
+              <a href={CONTACT.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-white/70 hover:text-red-400 transition-colors"><Facebook size={24} strokeWidth={2.5} /></a>
+            </div>
           </div>,
           document.body
         )}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { MapPin, Phone, Mail, Award, Home as HomeIcon, Star, Users, MessageCircle, X, Search, DollarSign, Key } from 'lucide-react';
+import { MapPin, Phone, Mail, Award, Star, Users, MessageCircle, X, Search, DollarSign, Key } from 'lucide-react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Chat from './components/Chat';
 import { Logo } from './components/Logo';
@@ -9,7 +9,9 @@ import StickyHeader from './components/StickyHeader';
 import { Message } from './types';
 import Buyers from './pages/Buyers';
 import Sellers from './pages/Sellers';
+import OpenHouse from './pages/OpenHouse';
 import LeadFormPopup from './components/LeadFormPopup';
+import SEO from './components/SEO';
 
 function StatCounter({ end, prefix = '', suffix = '', decimals = 0 }: {
   end: number;
@@ -77,13 +79,13 @@ function HomePage() {
 
   const contactItems = [
     { href: 'tel:7033823247', icon: Phone, label: 'Phone', value: '703.382.3247' },
-    { href: 'tel:5713861075', icon: Phone, label: 'Secondary Phone', value: '571.386.1075' },
     { href: 'mailto:tushar.gala@pearsonsmithrealty.com', icon: Mail, label: 'Email', value: 'tushar.gala@pearsonsmithrealty.com' },
   ];
 
   return (
     <>
       {/* Hero */}
+      <SEO canonical="/" />
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -276,26 +278,6 @@ function HomePage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  { icon: Award, text: 'Top Producer 2023 — Pearson Smith Realty' },
-                  { icon: HomeIcon, text: 'Luxury Property Specialist' },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 16 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 + i * 0.1 }}
-                    className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm hover:border-red-500/30 hover:shadow-md transition-all"
-                  >
-                    <div className="w-11 h-11 rounded-xl bg-red-600/10 flex items-center justify-center text-red-600 shrink-0">
-                      <item.icon size={20} />
-                    </div>
-                    <span className="text-sm font-semibold text-zinc-700">{item.text}</span>
-                  </motion.div>
-                ))}
-              </div>
             </motion.div>
           </div>
         </div>
@@ -405,6 +387,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/buyers" element={<Buyers />} />
         <Route path="/sellers" element={<Sellers />} />
+        <Route path="/open-house" element={<OpenHouse />} />
       </Routes>
 
       {/* Chat Button */}

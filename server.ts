@@ -125,6 +125,51 @@ async function startServer() {
     }
   });
 
+  app.get("/api/feedback-schema", async (_req, res) => {
+    const airtableBaseId = process.env.AIRTABLE_BASE_ID;
+    const airtableToken = process.env.token;
+    const r = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/tbltLA7BO0R7Iv9OZ`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${airtableToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ records: [{ fields: { Phone: 'test123' } }] }),
+    });
+    const data = await r.json();
+    res.json({ status: r.status, data });
+  });
+
+  app.post("/api/feedback", async (req, res) => {
+    const { name, phone, email, intents, heardFrom, likedMost, likedLeast, additionalComments, workingWithAgent, sendOptions, notes } = req.body;
+    const ratingFields = ['Price', 'Location', 'Floor Plan', 'Kitchen', 'Curb Appeal', 'Overall Opinion'];
+    try {
+      const airtableBaseId = process.env.AIRTABLE_BASE_ID;
+      const airtableToken = process.env.token;
+      if (airtableBaseId && airtableToken) {
+        const fields: Record<string, string> = Object.fromEntries(
+          Object.entries({
+            'Visitor Name': name, Phone: phone, Email: email, Intent: intents,
+            ...Object.fromEntries(ratingFields.map(f => [f, req.body[f] || ''])),
+            'Heard From': heardFrom, 'Liked Most': likedMost, 'Liked Least': likedLeast,
+            'Additional Comments': additionalComments, 'Working With Agent': workingWithAgent,
+            'Send Options': sendOptions, Notes: notes,
+          }).filter(([, v]) => v != null && v !== '')
+        );
+        console.log('Feedback fields:', JSON.stringify(fields));
+        const r = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/tbltLA7BO0R7Iv9OZ`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${airtableToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: [{ fields }] }),
+        });
+        const txt = await r.text();
+        if (!r.ok) console.error('Airtable feedback error:', r.status, txt);
+        else console.log('Airtable feedback success');
+      }
+      res.status(201).json({ success: true });
+    } catch (error) {
+      console.error('Feedback error:', error);
+      res.status(500).json({ error: 'Failed to save feedback' });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

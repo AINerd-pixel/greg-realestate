@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ShoppingCart, CheckCircle, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import SEO from '../components/SEO';
 
 const cards = [
   {
@@ -27,12 +27,12 @@ export default function Buyers() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-red-500/30">
-
-      <nav className="p-6 border-b border-zinc-100">
-        <Navigation />
-      </nav>
-
-      <main className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
+      <SEO
+        title="Home Buyers"
+        description="Buying a home in Northern Virginia? Tushar Gala guides first-time buyers and investors through property search, due diligence, and closing in Herndon, Leesburg, and beyond."
+        canonical="/buyers"
+      />
+      <main className="max-w-5xl mx-auto px-6 pt-28 pb-16 sm:pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
