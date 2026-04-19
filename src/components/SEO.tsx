@@ -18,7 +18,7 @@ const LOCAL_BUSINESS_JSON = {
   name: 'Tushar Gala – Gala Real Estate Group',
   image: DEFAULT_IMAGE,
   url: BASE_URL,
-  telephone: '+17033823247',
+  telephone: '+17133823247',
   email: 'tushar.gala@pearsonsmithrealty.com',
   address: {
     '@type': 'PostalAddress',

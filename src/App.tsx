@@ -78,7 +78,7 @@ function HomePage() {
   ];
 
   const contactItems = [
-    { href: 'tel:7033823247', icon: Phone, label: 'Phone', value: '703.382.3247' },
+    { href: 'tel:7133823247', icon: Phone, label: 'Phone', value: '713.382.3247' },
     { href: 'mailto:tushar.gala@pearsonsmithrealty.com', icon: Mail, label: 'Email', value: 'tushar.gala@pearsonsmithrealty.com' },
   ];
 

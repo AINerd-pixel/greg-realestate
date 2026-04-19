@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Phone, Mail, Facebook } from 'lucide-react';
 
 const CONTACT = {
-  phone: 'tel:+17033823247',
+  phone: 'tel:+17133823247',
   email: 'mailto:tushar.gala@pearsonsmithrealty.com',
   facebook: 'https://www.facebook.com/profile.php?id=100090476906978',
 };
