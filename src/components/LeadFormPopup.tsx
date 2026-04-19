@@ -7,7 +7,12 @@ import { useLocation } from 'react-router-dom';
 const STORAGE_KEY = 'lead_form_dismissed';
 
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
-const isValidPhone = (v: string) => /^\+?[\d\s\-().]{7,}$/.test(v) && v.replace(/\D/g, '').length >= 7;
+const formatPhone = (v: string) => {
+  const digits = v.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+};
 
 export default function LeadFormPopup() {
   const location = useLocation();
@@ -38,8 +43,8 @@ export default function LeadFormPopup() {
     if (!form.name.trim()) errs.name = 'Full name is required.';
     if (!form.phone.trim()) {
       errs.phone = 'Phone number is required.';
-    } else if (!isValidPhone(form.phone)) {
-      errs.phone = 'Enter a valid phone number.';
+    } else if (form.phone.replace(/\D/g, '').length < 10) {
+      errs.phone = 'Enter a valid 10-digit phone number.';
     }
     if (form.email && !isValidEmail(form.email)) {
       errs.email = 'Enter a valid email address.';
@@ -125,11 +130,32 @@ export default function LeadFormPopup() {
                         {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
                       </div>
                       <div>
-                        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Contact Number *" className={inputClass('phone')} />
+                        <input
+                          name="phone"
+                          value={form.phone}
+                          onChange={e => {
+                            const formatted = formatPhone(e.target.value);
+                            setForm(prev => ({ ...prev, phone: formatted }));
+                            if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
+                          }}
+                          placeholder="555-555-5555 *"
+                          inputMode="numeric"
+                          className={inputClass('phone')}
+                        />
                         {errors.phone && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phone}</p>}
                       </div>
                       <div>
-                        <input name="email" value={form.email} onChange={handleChange} placeholder="Email Address" type="email" className={inputClass('email')} />
+                        <input
+                          name="email"
+                          value={form.email}
+                          onChange={handleChange}
+                          onBlur={e => {
+                            if (e.target.value && !isValidEmail(e.target.value))
+                              setErrors(prev => ({ ...prev, email: 'Enter a valid email address.' }));
+                          }}
+                          placeholder="Email Address"
+                          className={inputClass('email')}
+                        />
                         {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
                       </div>
                       <div>
